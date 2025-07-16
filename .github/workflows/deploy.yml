@@ -1,0 +1,43 @@
+name: Build and Deploy .NET to EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore Dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Publish
+      run: dotnet publish --configuration Release --output ./publish
+
+    - name: Copy to EC2
+      env:
+        EC2_PASS: ${{ secrets.EC2_PASS }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y sshpass
+        sshpass -p "$EC2_PASS" scp -o StrictHostKeyChecking=no -r ./publish/* ubuntu@<EC2_PUBLIC_IP>:/home/ubuntu/webapp/
+
+    - name: Restart EC2 Service
+      env:
+        EC2_PASS: ${{ secrets.EC2_PASS }}
+      run: |
+        sshpass -p "$EC2_PASS" ssh -o StrictHostKeyChecking=no ubuntu@<EC2_PUBLIC_IP> 'sudo systemctl restart dotnet-webapp'
