@@ -34,10 +34,10 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y sshpass
-        sshpass -p "$EC2_PASS" scp -o StrictHostKeyChecking=no -r ./publish/* ubuntu@<EC2_PUBLIC_IP>:/home/ubuntu/webapp/
+        sshpass -p "$EC2_PASS" scp -o StrictHostKeyChecking=no -r ./publish/* ubuntu@100.24.18.186:/home/ubuntu/webapp/
 
     - name: Restart EC2 Service
       env:
         EC2_PASS: ${{ secrets.EC2_PASS }}
       run: |
-        sshpass -p "$EC2_PASS" ssh -o StrictHostKeyChecking=no ubuntu@<EC2_PUBLIC_IP> 'sudo systemctl restart dotnet-webapp'
+        sshpass -p "$EC2_PASS" ssh -o StrictHostKeyChecking=no ubuntu@100.24.18.186 'sudo systemctl restart dotnet-webapp'
